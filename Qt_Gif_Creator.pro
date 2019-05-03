@@ -27,9 +27,9 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
     xygifcreator.cpp \
-    gif.c \
     xygifframe.cpp \
-    xymovablewidget.cpp
+    xymovablewidget.cpp \
+    gif.cpp
 
 HEADERS += \
     xygifcreator.h \
