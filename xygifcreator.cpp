@@ -1,5 +1,5 @@
 #include "xygifcreator.h"
-#include "gif.c"
+#include "gif.cpp"
 #include <QImage>
 
 XYGifCreator::XYGifCreator(QObject *parent)
