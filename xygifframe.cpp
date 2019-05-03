@@ -50,7 +50,7 @@ void XYGifFrame::start()
     {
         mTimer.start(ui->interval->value());
         mPixs = 0;
-        ui->pushButton->setText(QStringLiteral("停止"));
+        ui->pushButton->setText(QStringLiteral("停止录制"));
         mGifCreator->begin(file.toUtf8().data(), ui->width->value(), ui->height->value());
     }
 }
@@ -58,7 +58,7 @@ void XYGifFrame::start()
 void XYGifFrame::stop()
 {
     mTimer.stop();
-    ui->pushButton->setText(QStringLiteral("启动"));
+    ui->pushButton->setText(QStringLiteral("开始录制"));
     mGifCreator->end();
 }
 
