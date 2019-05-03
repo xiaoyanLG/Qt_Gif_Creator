@@ -2,7 +2,6 @@
 #define XYGIFCREATOR_H
 
 #include <QObject>
-#include <QMutex>
 
 class Gif_H;
 class XYGifCreator : public QObject
@@ -17,7 +16,6 @@ public slots:
     void end();
 
 private:
-    QMutex  mMutex;
     Gif_H  *mGif;
 };
 
