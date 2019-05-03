@@ -6,9 +6,11 @@
 #include <QScreen>
 #include <QResizeEvent>
 #include <QDesktopWidget>
+#include <QDebug>
 
 XYGifFrame::XYGifFrame(QWidget *parent)
     : XYMovableWidget(parent),
+      mStartResize(false),
       ui(new Ui::XYGifFrame)
 {
     ui->setupUi(this);
@@ -21,6 +23,8 @@ XYGifFrame::XYGifFrame(QWidget *parent)
     connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(active()));
     connect(ui->pushButton_2, SIGNAL(clicked()), qApp, SLOT(quit()));
     connect(&mTimer, SIGNAL(timeout()), this, SLOT(frame()));
+
+    setMouseTracking(true);
 }
 
 void XYGifFrame::doResize()
@@ -97,4 +101,45 @@ void XYGifFrame::resizeEvent(QResizeEvent *)
 
     ui->width->setValue(rect.width());
     ui->height->setValue(rect.height());
+}
+
+void XYGifFrame::mousePressEvent(QMouseEvent *event)
+{
+    QRect rect(QPoint(width() - 3, height() - 3), QSize(3, 3));
+    if (rect.contains(event->pos()))
+    {
+        mStartResize = true;
+        mStartGeometry = QRect(event->globalPos(), size());
+    }
+    else
+    {
+        XYMovableWidget::mousePressEvent(event);
+    }
+}
+
+void XYGifFrame::mouseReleaseEvent(QMouseEvent *event)
+{
+    mStartResize = false;
+    setCursor(Qt::ArrowCursor);
+    XYMovableWidget::mouseReleaseEvent(event);
+}
+
+void XYGifFrame::mouseMoveEvent(QMouseEvent *event)
+{
+    QRect rect(QPoint(width() - 3, height() - 3), QSize(3, 3));
+
+    if (mStartResize)
+    {
+        QPoint ch = event->globalPos() - mStartGeometry.topLeft();
+        resize(mStartGeometry.size() + QSize(ch.x(), ch.y()));
+    }
+    else if (rect.contains(event->pos()))
+    {
+        setCursor(Qt::SizeFDiagCursor);
+    }
+    else
+    {
+        setCursor(Qt::ArrowCursor);
+        XYMovableWidget::mouseMoveEvent(event);
+    }
 }

@@ -25,6 +25,14 @@ public slots:
 protected:
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+
+    // 用于resize窗口
+private:
+    bool   mStartResize;
+    QRect  mStartGeometry;
 
 private:
     Ui::XYGifFrame *ui;
