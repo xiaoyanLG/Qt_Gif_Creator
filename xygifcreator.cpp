@@ -22,6 +22,7 @@ void XYGifCreator::begin(const QString &file, int width, int height, int delay)
 
 void XYGifCreator::frame(const QImage &img)
 {
+    // gif.cpp 文件有描述目前只能是RGBA8888图片格式，并且alpha没有被使用
     QImage img32 = img.convertToFormat(QImage::Format_RGBA8888);
     mGif->GifWriteFrame(img32.bits(), static_cast<quint32>(img32.width()), static_cast<quint32>(img32.height()), static_cast<quint32>(mDelay));
 }
