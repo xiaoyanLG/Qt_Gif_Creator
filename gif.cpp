@@ -422,7 +422,7 @@ public:
                 // palettize the pixel
                 int32_t bestDiff = 1000000;
                 int32_t bestInd = 1;
-                GifGetClosestPaletteColor(pPal, nextFrame[0], nextFrame[1], nextFrame[2], bestInd, bestDiff);
+                GifGetClosestPaletteColor(pPal, nextFrame[2], nextFrame[1], nextFrame[0], bestInd, bestDiff);
 
                 // Write the resulting color to the output buffer
                 outFrame[0] = pPal->r[bestInd];

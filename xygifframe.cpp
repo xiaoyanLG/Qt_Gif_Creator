@@ -6,6 +6,7 @@
 #include <QScreen>
 #include <QResizeEvent>
 #include <QDesktopWidget>
+#include <QDateTime>
 #include <QDebug>
 
 XYGifFrame::XYGifFrame(QWidget *parent)
@@ -49,7 +50,7 @@ void XYGifFrame::active()
 
 void XYGifFrame::start()
 {
-    QString file = QFileDialog::getSaveFileName(this, "", "xiaoyan.gif");
+    QString file = QFileDialog::getSaveFileName(this, "", QString("xy-%1.gif").arg(QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")));
     if (!file.isEmpty())
     {
         mTimer.start(ui->interval->value());
