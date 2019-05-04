@@ -18,6 +18,8 @@ public slots:
 
 private:
     Gif  *mGif;
+    int   mWidth;
+    int   mHeight;
     int   mDelay;
 };
 

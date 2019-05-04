@@ -69,6 +69,7 @@ void XYGifFrame::start()
         ui->gif->setText(QStringLiteral("停止录制"));
         mGifCreator->begin(file.toUtf8().data(), ui->width->value(), ui->height->value());
 
+        ui->tips->setText(QStringLiteral("已保存 %1 张图片").arg(mPixs));
         // 延迟1秒，避免把选择图片的窗口录制进去
         QTimer::singleShot(1000, this, [this]() {
             mTimer.start(ui->interval->value());
