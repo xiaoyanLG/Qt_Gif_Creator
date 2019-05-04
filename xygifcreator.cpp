@@ -15,7 +15,8 @@ void XYGifCreator::begin(const QString &file, int width, int height)
 
 void XYGifCreator::frame(const QImage &img)
 {
-    mGif->GifWriteFrame(img.bits(), static_cast<quint32>(img.width()), static_cast<quint32>(img.height()), 0);
+    QImage img32 = img.convertToFormat(QImage::Format_ARGB32);
+    mGif->GifWriteFrame(img32.bits(), static_cast<quint32>(img32.width()), static_cast<quint32>(img32.height()), 0);
 }
 
 void XYGifCreator::end()
