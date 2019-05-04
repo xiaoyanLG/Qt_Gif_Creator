@@ -29,17 +29,23 @@ SOURCES += \
     xygifcreator.cpp \
     xygifframe.cpp \
     xymovablewidget.cpp \
-    gif.cpp
+    gif.cpp \
+    xypackimage.cpp
 
 HEADERS += \
     xygifcreator.h \
     xygifframe.h \
-    xymovablewidget.h
+    xymovablewidget.h \
+    xypackimage.h
 
 FORMS += \
-    xygifframe.ui
+    xygifframe.ui \
+    xypackimage.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    images.qrc

@@ -14,9 +14,11 @@ class XYGifFrame : public XYMovableWidget
     Q_OBJECT
 public:
     explicit XYGifFrame(QWidget *parent = nullptr);
+    ~XYGifFrame();
 
 public slots:
     void doResize();
+    void packImages();
     void active();
     void start();
     void stop();

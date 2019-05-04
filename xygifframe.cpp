@@ -1,4 +1,5 @@
 #include "xygifframe.h"
+#include "xypackimage.h"
 #include "ui_xygifframe.h"
 #include <QPainter>
 #include <QFileDialog>
@@ -19,11 +20,18 @@ XYGifFrame::XYGifFrame(QWidget *parent)
 
     connect(ui->width, SIGNAL(valueChanged(int)), this, SLOT(doResize()));
     connect(ui->height, SIGNAL(valueChanged(int)), this, SLOT(doResize()));
-    connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(active()));
-    connect(ui->pushButton_2, SIGNAL(clicked()), qApp, SLOT(quit()));
+    connect(ui->gif, SIGNAL(clicked()), this, SLOT(active()));
+    connect(ui->img, SIGNAL(clicked()), this, SLOT(packImages()));
     connect(&mTimer, SIGNAL(timeout()), this, SLOT(frame()));
+    connect(ui->quit, SIGNAL(clicked()), qApp, SLOT(quit()));
 
     setMouseTracking(true);
+    setFocus();
+}
+
+XYGifFrame::~XYGifFrame()
+{
+    delete ui;
 }
 
 void XYGifFrame::doResize()
@@ -32,6 +40,12 @@ void XYGifFrame::doResize()
     rect.adjust(-3, -3, 3, 30);
 
     resize(rect.size());
+}
+
+void XYGifFrame::packImages()
+{
+    XYPackImage img(this);
+    img.exec();
 }
 
 void XYGifFrame::active()
@@ -51,17 +65,21 @@ void XYGifFrame::start()
     QString file = QFileDialog::getSaveFileName(this, "", QString("xy-%1.gif").arg(QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")));
     if (!file.isEmpty())
     {
-        mTimer.start(ui->interval->value());
         mPixs = 0;
-        ui->pushButton->setText(QStringLiteral("停止录制"));
+        ui->gif->setText(QStringLiteral("停止录制"));
         mGifCreator->begin(file.toUtf8().data(), ui->width->value(), ui->height->value());
+
+        // 延迟1秒，避免把选择图片的窗口录制进去
+        QTimer::singleShot(1000, this, [this]() {
+            mTimer.start(ui->interval->value());
+        });
     }
 }
 
 void XYGifFrame::stop()
 {
     mTimer.stop();
-    ui->pushButton->setText(QStringLiteral("开始录制"));
+    ui->gif->setText(QStringLiteral("开始录制"));
     mGifCreator->end();
 }
 
