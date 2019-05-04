@@ -5,7 +5,7 @@
 XYGifCreator::XYGifCreator(QObject *parent)
     : QObject(parent)
 {
-    mGif = new Gif_H;
+    mGif = new Gif;
 }
 
 void XYGifCreator::begin(const QString &file, int width, int height)
@@ -15,7 +15,7 @@ void XYGifCreator::begin(const QString &file, int width, int height)
 
 void XYGifCreator::frame(const QImage &img)
 {
-    QImage img32 = img.convertToFormat(QImage::Format_ARGB32);
+    QImage img32 = img.convertToFormat(QImage::Format_RGBA8888);
     mGif->GifWriteFrame(img32.bits(), static_cast<quint32>(img32.width()), static_cast<quint32>(img32.height()), 0);
 }
 

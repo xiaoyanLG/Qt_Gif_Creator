@@ -5,9 +5,7 @@
 #include <QApplication>
 #include <QScreen>
 #include <QResizeEvent>
-#include <QDesktopWidget>
 #include <QDateTime>
-#include <QDebug>
 
 XYGifFrame::XYGifFrame(QWidget *parent)
     : XYMovableWidget(parent),
@@ -75,7 +73,7 @@ void XYGifFrame::frame()
         QRect rect = this->rect();
         rect.adjust(3, 3, -3, -30);
         rect.translate(pos());
-        QImage img = screen->grabWindow(qApp->desktop()->winId(), rect.x(), rect.y(), rect.width(), rect.height()).toImage();
+        QImage img = screen->grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height()).toImage();
         mGifCreator->frame(img);
         mPixs++;
 

@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-class Gif_H;
+class Gif;
 class XYGifCreator : public QObject
 {
     Q_OBJECT
@@ -16,7 +16,7 @@ public slots:
     void end();
 
 private:
-    Gif_H  *mGif;
+    Gif  *mGif;
 };
 
 #endif // XYGIFCREATOR_H
