@@ -79,7 +79,7 @@ void XYGifFrame::frame()
         mGifCreator->frame(img);
         mPixs++;
 
-        ui->tips->setText(QStringLiteral("已保存 %1 张").arg(mPixs));
+        ui->tips->setText(QStringLiteral("已保存 %1 张图片").arg(mPixs));
     }
 }
 
