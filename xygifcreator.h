@@ -13,14 +13,14 @@ public:
 
 public slots:
     void begin(const QString &file, int width, int height, int delay = 0);
-    void frame(const QImage &img);
+    void frame(const QImage &img, int delay = 0);
     void end();
 
 private:
     Gif  *mGif;
     int   mWidth;
     int   mHeight;
-    int   mDelay;
+
 };
 
 #endif // XYGIFCREATOR_H

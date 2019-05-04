@@ -19,6 +19,7 @@ public:
 public slots:
     void doResize();
     void packImages();
+    void setGifFile();
     void active();
     void start();
     void stop();
@@ -38,9 +39,11 @@ private:
 
 private:
     Ui::XYGifFrame *ui;
+    QRect           mRecordRect;
     XYGifCreator   *mGifCreator;
     QTimer          mTimer;
     int             mPixs;
+    QString         mGifFile;
 };
 
 #endif // XYGIFFRAME_H

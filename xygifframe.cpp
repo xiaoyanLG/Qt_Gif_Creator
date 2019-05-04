@@ -7,6 +7,7 @@
 #include <QScreen>
 #include <QResizeEvent>
 #include <QDateTime>
+#include <QMessageBox>
 
 XYGifFrame::XYGifFrame(QWidget *parent)
     : XYMovableWidget(parent),
@@ -23,9 +24,12 @@ XYGifFrame::XYGifFrame(QWidget *parent)
     connect(ui->gif, SIGNAL(clicked()), this, SLOT(active()));
     connect(ui->img, SIGNAL(clicked()), this, SLOT(packImages()));
     connect(&mTimer, SIGNAL(timeout()), this, SLOT(frame()));
+    connect(ui->save, SIGNAL(clicked()), this, SLOT(setGifFile()));
     connect(ui->quit, SIGNAL(clicked()), qApp, SLOT(quit()));
 
+    ui->content->adjustSize();
     setMouseTracking(true);
+    setMinimumSize(162, 60);
     setFocus();
 }
 
@@ -37,7 +41,7 @@ XYGifFrame::~XYGifFrame()
 void XYGifFrame::doResize()
 {
     QRect rect(pos(), QSize(ui->width->value(), ui->height->value()));
-    rect.adjust(-3, -3, 3, 30);
+    rect.adjust(-3, -3, 3, ui->content->height() + 5);
 
     resize(rect.size());
 }
@@ -46,6 +50,13 @@ void XYGifFrame::packImages()
 {
     XYPackImage img(this);
     img.exec();
+}
+
+void XYGifFrame::setGifFile()
+{
+    mGifFile = QFileDialog::getSaveFileName(this, "", QString("xy-%1.gif").arg(QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")));
+
+    ui->save->setToolTip(mGifFile);
 }
 
 void XYGifFrame::active()
@@ -62,18 +73,18 @@ void XYGifFrame::active()
 
 void XYGifFrame::start()
 {
-    QString file = QFileDialog::getSaveFileName(this, "", QString("xy-%1.gif").arg(QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")));
-    if (!file.isEmpty())
+    if (!mGifFile.isEmpty())
     {
         mPixs = 0;
         ui->gif->setText(QStringLiteral("停止录制"));
-        mGifCreator->begin(file.toUtf8().data(), ui->width->value(), ui->height->value());
+        mGifCreator->begin(mGifFile.toUtf8().data(), ui->width->value(), ui->height->value(), 1);
 
-        ui->tips->setText(QStringLiteral("已保存 %1 张图片").arg(mPixs));
-        // 延迟1秒，避免把选择图片的窗口录制进去
-        QTimer::singleShot(1000, this, [this]() {
-            mTimer.start(ui->interval->value());
-        });
+        frame();
+        mTimer.start(static_cast<int>(1000.0 / ui->interval->value()));
+    }
+    else
+    {
+        QMessageBox::warning(this, QStringLiteral("提醒"), QStringLiteral("请先设置保存gif的位置！"));
     }
 }
 
@@ -89,11 +100,12 @@ void XYGifFrame::frame()
     auto screen = qApp->screenAt(pos());
     if (screen != nullptr)
     {
-        QRect rect = this->rect();
-        rect.adjust(3, 3, -3, -30);
-        rect.translate(pos());
-        QImage img = screen->grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height()).toImage();
-        mGifCreator->frame(img);
+        QImage img = screen->grabWindow(0,
+                                        x() + mRecordRect.x(),
+                                        y() + mRecordRect.y(),
+                                        mRecordRect.width(),
+                                        mRecordRect.height()).toImage();
+        mGifCreator->frame(img, ui->interval->value());
         mPixs++;
 
         ui->tips->setText(QStringLiteral("已保存 %1 张图片").arg(mPixs));
@@ -102,23 +114,23 @@ void XYGifFrame::frame()
 
 void XYGifFrame::paintEvent(QPaintEvent *)
 {
-    QRect rect = this->rect();
-    QRegion r1(rect);
-    QRegion r2(rect.adjusted(3, 3, -3, -30));
-    QRegion r3 = r1.xored(r2);
-    setMask(r3);
     QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(rect, Qt::gray);
+    painter.fillRect(rect(), Qt::gray);
 }
 
 void XYGifFrame::resizeEvent(QResizeEvent *)
 {
     QRect rect = this->rect();
-    rect.adjust(3, 3, -3, -30);
+    rect.adjust(3, 3, -3, -(ui->content->height() + 5));
+    mRecordRect = rect;
 
-    ui->width->setValue(rect.width());
-    ui->height->setValue(rect.height());
+    ui->width->setValue(mRecordRect.width());
+    ui->height->setValue(mRecordRect.height());
+
+    QRegion region(this->rect());
+    setMask(region.xored(mRecordRect));
+
+    ui->content->move(width() - ui->content->width() - 3, height() - ui->content->height() - 3);
 }
 
 void XYGifFrame::mousePressEvent(QMouseEvent *event)

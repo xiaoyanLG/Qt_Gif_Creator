@@ -41,9 +41,12 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_pushButton_3_clicked();
+
 private:
     Ui::XYPackImage *ui;
     Work            *mWorkThread;
+    QString          mGifFile;
 };
 
 #endif // XYPACKIMAGE_H
