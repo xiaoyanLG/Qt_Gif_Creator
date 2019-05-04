@@ -107,7 +107,7 @@ void XYGifFrame::resizeEvent(QResizeEvent *)
 void XYGifFrame::mousePressEvent(QMouseEvent *event)
 {
     QRect rect(QPoint(width() - 3, height() - 3), QSize(3, 3));
-    if (rect.contains(event->pos()))
+    if (rect.contains(event->pos()) && !mTimer.isActive())
     {
         mStartResize = true;
         mStartGeometry = QRect(event->globalPos(), size());
@@ -134,7 +134,7 @@ void XYGifFrame::mouseMoveEvent(QMouseEvent *event)
         QPoint ch = event->globalPos() - mStartGeometry.topLeft();
         resize(mStartGeometry.size() + QSize(ch.x(), ch.y()));
     }
-    else if (rect.contains(event->pos()))
+    else if (rect.contains(event->pos()) && !mTimer.isActive())
     {
         setCursor(Qt::SizeFDiagCursor);
     }
