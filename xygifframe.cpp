@@ -32,25 +32,10 @@ static QImage getScreenImage(int x, int y, int width, int height)
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 24;
 
-//    HICON hCursor = (HICON)GetCursor();
-//    POINT ptCursor;
-//    GetCursorPos(&ptCursor);
-//    ICONINFO IconInfo = {0};
     CURSORINFO hCur ;
     ZeroMemory(&hCur,sizeof(hCur));
     hCur.cbSize=sizeof(hCur);
     GetCursorInfo(&hCur);
-
-//    if(GetIconInfo(hCursor, &IconInfo))
-//    {
-//        ptCursor.x -= IconInfo.xHotspot;
-//        ptCursor.y -= IconInfo.yHotspot;
-//        if(nullptr != IconInfo.hbmMask)
-//            DeleteObject(IconInfo.hbmMask);
-//        if(nullptr != IconInfo.hbmColor)
-//            DeleteObject(IconInfo.hbmColor);
-//    }
-
 
     HBITMAP bitmap = ::CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, (LPVOID*)&lpBitmapBits, nullptr, 0);
     HGDIOBJ oldbmp = ::SelectObject(hMemDC, bitmap);
@@ -65,7 +50,7 @@ static QImage getScreenImage(int x, int y, int width, int height)
     bh.bfSize = bh.bfOffBits + ((nWidth*nHeight)*3);
 
     int size = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + 3 * nWidth * nHeight;
-    uchar bmp[size];
+    uchar *bmp = new uchar[size];
     uint offset = 0;
     memcpy(bmp, (char *)&bh, sizeof(BITMAPFILEHEADER));
     offset = sizeof(BITMAPFILEHEADER);
@@ -78,6 +63,7 @@ static QImage getScreenImage(int x, int y, int width, int height)
     ::DeleteObject(hMemDC);
     ::ReleaseDC(nullptr, hScrDC);
     QImage image = QImage::fromData(bmp, size);
+    delete[] bmp;
     return image;
 }
 #endif
