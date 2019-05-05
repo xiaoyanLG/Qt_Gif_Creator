@@ -17,7 +17,7 @@ XYGifFrame::XYGifFrame(QWidget *parent)
     ui->setupUi(this);
     mGifCreator = new XYGifCreator(this);
     mTimer.setSingleShot(false);
-    setWindowFlags(Qt::FramelessWindowHint);
+    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
 
     connect(ui->width, SIGNAL(valueChanged(int)), this, SLOT(doResize()));
     connect(ui->height, SIGNAL(valueChanged(int)), this, SLOT(doResize()));
@@ -30,7 +30,7 @@ XYGifFrame::XYGifFrame(QWidget *parent)
     ui->content->adjustSize();
     setMouseTracking(true);
     setMinimumSize(162, 60);
-    setFocus();
+    ui->gif->setFocus();
 }
 
 XYGifFrame::~XYGifFrame()
@@ -97,7 +97,18 @@ void XYGifFrame::stop()
 
 void XYGifFrame::frame()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
     auto screen = qApp->screenAt(pos());
+#else
+    QScreen *screen = nullptr;
+    foreach (screen, qApp->screens())
+    {
+        if (screen->geometry().contains(pos()))
+        {
+            break;
+        }
+    }
+#endif
     if (screen != nullptr)
     {
         QImage img = screen->grabWindow(0,
@@ -172,4 +183,18 @@ void XYGifFrame::mouseMoveEvent(QMouseEvent *event)
         setCursor(Qt::ArrowCursor);
         XYMovableWidget::mouseMoveEvent(event);
     }
+}
+
+void XYGifFrame::wheelEvent(QWheelEvent *event)
+{
+    if (event->delta() < 0)
+    {
+        ui->content->move(ui->content->x() + 6, ui->content->y());
+    }
+    else
+    {
+        ui->content->move(ui->content->x() - 6, ui->content->y());
+    }
+
+    XYMovableWidget::wheelEvent(event);
 }
