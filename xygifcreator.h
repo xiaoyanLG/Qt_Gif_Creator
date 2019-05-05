@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-class Gif;
+class XYGif;
 class XYGifCreator : public QObject
 {
     Q_OBJECT
@@ -11,15 +11,18 @@ public:
     explicit XYGifCreator(QObject *parent = nullptr);
     ~XYGifCreator();
 
+signals:
+    void finished();
+
 public slots:
-    void begin(const QString &file, int width, int height, int delay = 0);
-    void frame(const QImage &img, int delay = 0);
-    void end();
+    bool begin(const QString &file, int width, int height, int delay = 0, Qt::ConnectionType type = Qt::AutoConnection);
+    bool frame(const QImage &img, int delay = 0, Qt::ConnectionType type = Qt::AutoConnection);
+    bool end(Qt::ConnectionType type = Qt::AutoConnection);
 
 private:
-    Gif  *mGif;
-    int   mWidth;
-    int   mHeight;
+    XYGif  *mGif;
+    int     mWidth;
+    int     mHeight;
 
 };
 

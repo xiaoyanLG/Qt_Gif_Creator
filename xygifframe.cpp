@@ -9,6 +9,74 @@
 #include <QDateTime>
 #include <QMessageBox>
 
+#ifdef Q_OS_WIN32
+#include <windows.h>
+
+static QImage getScreenImage(int x, int y, int width, int height)
+{
+    HDC hScrDC = ::GetDC(nullptr);
+    HDC hMemDC = nullptr;
+
+    BYTE *lpBitmapBits = nullptr;
+
+    int nWidth = width;
+    int nHeight = height;
+
+    hMemDC = ::CreateCompatibleDC(hScrDC);
+
+    BITMAPINFO bi;
+    ZeroMemory(&bi, sizeof(BITMAPINFO));
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = nWidth;
+    bi.bmiHeader.biHeight = nHeight;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 24;
+
+    HICON hCursor = (HICON)GetCursor();
+    POINT ptCursor;
+    GetCursorPos(&ptCursor);
+    ICONINFO IconInfo = {0};
+    if(GetIconInfo(hCursor, &IconInfo))
+    {
+        ptCursor.x -= IconInfo.xHotspot;
+        ptCursor.y -= IconInfo.yHotspot;
+        if(nullptr != IconInfo.hbmMask)
+            DeleteObject(IconInfo.hbmMask);
+        if(nullptr != IconInfo.hbmColor)
+            DeleteObject(IconInfo.hbmColor);
+    }
+
+
+    HBITMAP bitmap = ::CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, (LPVOID*)&lpBitmapBits, nullptr, 0);
+    HGDIOBJ oldbmp = ::SelectObject(hMemDC, bitmap);
+
+    ::BitBlt(hMemDC, 0, 0, nWidth, nHeight, hScrDC, x, y, SRCCOPY);
+    DrawIconEx(hMemDC, ptCursor.x - x, ptCursor.y - y, hCursor, 0, 0, 0, nullptr, DI_NORMAL | DI_COMPAT);
+
+    BITMAPFILEHEADER bh;
+    ZeroMemory(&bh, sizeof(BITMAPFILEHEADER));
+    bh.bfType = 0x4d42;  //bitmap
+    bh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bh.bfSize = bh.bfOffBits + ((nWidth*nHeight)*3);
+
+    int size = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + 3 * nWidth * nHeight;
+    uchar bmp[size];
+    uint offset = 0;
+    memcpy(bmp, (char *)&bh, sizeof(BITMAPFILEHEADER));
+    offset = sizeof(BITMAPFILEHEADER);
+    memcpy(bmp + offset, (char *)&(bi.bmiHeader), sizeof(BITMAPINFOHEADER));
+    offset += sizeof(BITMAPINFOHEADER);
+    memcpy(bmp + offset, (char *)lpBitmapBits, 3 * nWidth * nHeight);
+
+    ::SelectObject(hMemDC, oldbmp);
+    ::DeleteObject(bitmap);
+    ::DeleteObject(hMemDC);
+    ::ReleaseDC(nullptr, hScrDC);
+    QImage image = QImage::fromData(bmp, size);
+    return image;
+}
+#endif
+
 XYGifFrame::XYGifFrame(QWidget *parent)
     : XYMovableWidget(parent),
       mStartResize(false),
@@ -26,6 +94,9 @@ XYGifFrame::XYGifFrame(QWidget *parent)
     connect(&mTimer, SIGNAL(timeout()), this, SLOT(frame()));
     connect(ui->save, SIGNAL(clicked()), this, SLOT(setGifFile()));
     connect(ui->quit, SIGNAL(clicked()), qApp, SLOT(quit()));
+    connect(mGifCreator, &XYGifCreator::finished, this, [this](){
+        this->ui->tips->setText(QStringLiteral("保存Gif完成！"));
+    });
 
     ui->content->adjustSize();
     setMouseTracking(true);
@@ -75,9 +146,14 @@ void XYGifFrame::start()
 {
     if (!mGifFile.isEmpty())
     {
+        if (!mGifCreator->begin(mGifFile.toUtf8().data(), ui->width->value(), ui->height->value(), 1))
+        {
+            QMessageBox::warning(this, QStringLiteral("提醒"), QStringLiteral("正在保存Gif，请稍等！"));
+            return;
+        }
+
         mPixs = 0;
         ui->gif->setText(QStringLiteral("停止录制"));
-        mGifCreator->begin(mGifFile.toUtf8().data(), ui->width->value(), ui->height->value(), 1);
 
         frame();
         mTimer.start(static_cast<int>(1000.0 / ui->interval->value()));
@@ -93,6 +169,8 @@ void XYGifFrame::stop()
     mTimer.stop();
     ui->gif->setText(QStringLiteral("开始录制"));
     mGifCreator->end();
+
+    this->ui->tips->setText(QStringLiteral("请等待保存Gif..."));
 }
 
 void XYGifFrame::frame()
@@ -111,11 +189,18 @@ void XYGifFrame::frame()
 #endif
     if (screen != nullptr)
     {
+#ifdef Q_OS_WIN32
+        QImage img = getScreenImage(x() + mRecordRect.x(),
+                                    y() + mRecordRect.y(),
+                                    mRecordRect.width(),
+                                    mRecordRect.height());
+#else
         QImage img = screen->grabWindow(0,
                                         x() + mRecordRect.x(),
                                         y() + mRecordRect.y(),
                                         mRecordRect.width(),
                                         mRecordRect.height()).toImage();
+#endif
         mGifCreator->frame(img, ui->interval->value());
         mPixs++;
 

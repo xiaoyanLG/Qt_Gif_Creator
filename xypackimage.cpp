@@ -88,17 +88,17 @@ Work::~Work()
 void Work::pickImags(const QString &file, const QStringList &imgs, int w, int h, int delay)
 {
     XYGifCreator gif;
-    gif.begin(file.toUtf8().data(), w, h, 1);
+    gif.begin(file.toUtf8().data(), w, h, 1, Qt::DirectConnection);
     emit progress(0);
     for (int i = 0; i < imgs.size(); ++i)
     {
         QImage img(imgs.at(i));
         img = img.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        gif.frame(img, delay);
+        gif.frame(img, delay, Qt::DirectConnection);
 
         progress(static_cast<int>((i + 1.0) / imgs.size() * 100));
     }
-    gif.end();
+    gif.end(Qt::DirectConnection);
 
     emit progress(100);
 }
