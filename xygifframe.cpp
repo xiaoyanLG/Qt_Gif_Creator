@@ -32,26 +32,31 @@ static QImage getScreenImage(int x, int y, int width, int height)
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 24;
 
-    HICON hCursor = (HICON)GetCursor();
-    POINT ptCursor;
-    GetCursorPos(&ptCursor);
-    ICONINFO IconInfo = {0};
-    if(GetIconInfo(hCursor, &IconInfo))
-    {
-        ptCursor.x -= IconInfo.xHotspot;
-        ptCursor.y -= IconInfo.yHotspot;
-        if(nullptr != IconInfo.hbmMask)
-            DeleteObject(IconInfo.hbmMask);
-        if(nullptr != IconInfo.hbmColor)
-            DeleteObject(IconInfo.hbmColor);
-    }
+//    HICON hCursor = (HICON)GetCursor();
+//    POINT ptCursor;
+//    GetCursorPos(&ptCursor);
+//    ICONINFO IconInfo = {0};
+    CURSORINFO hCur ;
+    ZeroMemory(&hCur,sizeof(hCur));
+    hCur.cbSize=sizeof(hCur);
+    GetCursorInfo(&hCur);
+
+//    if(GetIconInfo(hCursor, &IconInfo))
+//    {
+//        ptCursor.x -= IconInfo.xHotspot;
+//        ptCursor.y -= IconInfo.yHotspot;
+//        if(nullptr != IconInfo.hbmMask)
+//            DeleteObject(IconInfo.hbmMask);
+//        if(nullptr != IconInfo.hbmColor)
+//            DeleteObject(IconInfo.hbmColor);
+//    }
 
 
     HBITMAP bitmap = ::CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, (LPVOID*)&lpBitmapBits, nullptr, 0);
     HGDIOBJ oldbmp = ::SelectObject(hMemDC, bitmap);
 
     ::BitBlt(hMemDC, 0, 0, nWidth, nHeight, hScrDC, x, y, SRCCOPY);
-    DrawIconEx(hMemDC, ptCursor.x - x, ptCursor.y - y, hCursor, 0, 0, 0, nullptr, DI_NORMAL | DI_COMPAT);
+    DrawIconEx(hMemDC, hCur.ptScreenPos.x - x, hCur.ptScreenPos.y - y, hCur.hCursor, 0, 0, 0, nullptr, DI_NORMAL | DI_COMPAT);
 
     BITMAPFILEHEADER bh;
     ZeroMemory(&bh, sizeof(BITMAPFILEHEADER));
