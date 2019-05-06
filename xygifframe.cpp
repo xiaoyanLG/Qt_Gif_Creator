@@ -1,4 +1,4 @@
-#include "xygifframe.h"
+﻿#include "xygifframe.h"
 #include "xypackimage.h"
 #include "ui_xygifframe.h"
 #include <QPainter>

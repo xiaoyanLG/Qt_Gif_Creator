@@ -52,4 +52,5 @@ RESOURCES += \
 
 win32 {
 LIBS += -lGdi32 -luser32
+greaterThan(QT_MAJOR_VERSION, 4): RC_FILE = ico.rc
 }

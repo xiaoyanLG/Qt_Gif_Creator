@@ -1,4 +1,4 @@
-#include "xypackimage.h"
+﻿#include "xypackimage.h"
 #include "xygifcreator.h"
 #include "ui_xypackimage.h"
 #include <QFileDialog>
