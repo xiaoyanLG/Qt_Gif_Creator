@@ -125,6 +125,11 @@ void XYGifFrame::active()
 {
     if (!mTimer.isActive())
     {
+        if (mGifCreator->isRunning())
+        {
+            QMessageBox::warning(this, QStringLiteral("提醒"), QStringLiteral("正在保存Gif，请稍等！"));
+            return;
+        }
         start();
     }
     else
@@ -137,11 +142,9 @@ void XYGifFrame::start()
 {
     if (!mGifFile.isEmpty())
     {
-        if (!mGifCreator->begin(mGifFile.toUtf8().data(), ui->width->value(), ui->height->value(), 1))
-        {
-            QMessageBox::warning(this, QStringLiteral("提醒"), QStringLiteral("正在保存Gif，请稍等！"));
-            return;
-        }
+        mGifCreator->startThread();
+
+        mGifCreator->begin(mGifFile.toUtf8().data(), ui->width->value(), ui->height->value(), 1);
 
         mPixs = 0;
         ui->gif->setText(QStringLiteral("停止录制"));

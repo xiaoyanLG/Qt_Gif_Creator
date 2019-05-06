@@ -11,13 +11,16 @@ public:
     explicit XYGifCreator(QObject *parent = nullptr);
     ~XYGifCreator();
 
+    void startThread();
+    bool isRunning();
+
 signals:
     void finished();
 
 public slots:
-    bool begin(const QString &file, int width, int height, int delay = 0, Qt::ConnectionType type = Qt::AutoConnection);
-    bool frame(const QImage &img, int delay = 0, Qt::ConnectionType type = Qt::AutoConnection);
-    bool end(Qt::ConnectionType type = Qt::AutoConnection);
+    void begin(const QString &file, int width, int height, int delay = 0, Qt::ConnectionType type = Qt::AutoConnection);
+    void frame(const QImage &img, int delay = 0, Qt::ConnectionType type = Qt::AutoConnection);
+    void end(Qt::ConnectionType type = Qt::AutoConnection);
 
 private:
     XYGif  *mGif;

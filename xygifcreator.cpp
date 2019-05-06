@@ -2,6 +2,7 @@
 #include "gif.cpp"
 #include <QImage>
 #include <QThread>
+#include <QDebug>
 
 class XYGif : public QObject, public Gif
 {
@@ -11,20 +12,7 @@ public:
     {
         mWorkThread = new QThread;
         moveToThread(mWorkThread);
-        connect(this, &XYGif::finished, mWorkThread, &QThread::quit);
     }
-
-    void start()
-    {
-        mWorkThread->start();
-    }
-    bool isRunning()
-    {
-        return mWorkThread->isRunning();
-    }
-
-signals:
-    void finished();
 
 public slots:
     void begin(const QString &file, int width, int height, int delay)
@@ -42,18 +30,20 @@ public slots:
     {
         GifEnd();
 
-        emit finished();
+        mWorkThread->quit();
     }
 
 private:
     QThread *mWorkThread;
+
+    friend class XYGifCreator;
 };
 
 XYGifCreator::XYGifCreator(QObject *parent)
     : QObject(parent)
 {
     mGif = new XYGif;
-    connect(mGif, &XYGif::finished, this, &XYGifCreator::finished);
+    connect(mGif->mWorkThread, &QThread::finished, this, &XYGifCreator::finished);
 }
 
 XYGifCreator::~XYGifCreator()
@@ -61,16 +51,20 @@ XYGifCreator::~XYGifCreator()
     delete mGif;
 }
 
-bool XYGifCreator::begin(const QString &file, int width, int height, int delay, Qt::ConnectionType type)
+void XYGifCreator::startThread()
 {
-    if (mGif->isRunning())
-    {
-        return false;
-    }
+    mGif->mWorkThread->start();
+}
 
+bool XYGifCreator::isRunning()
+{
+    return mGif->mWorkThread->isRunning();
+}
+
+void XYGifCreator::begin(const QString &file, int width, int height, int delay, Qt::ConnectionType type)
+{
     mWidth  = width;
     mHeight = height;
-    mGif->start();
 
     QMetaObject::invokeMethod(mGif, "begin", type,
                               QGenericReturnArgument(),
@@ -78,11 +72,9 @@ bool XYGifCreator::begin(const QString &file, int width, int height, int delay, 
                               Q_ARG(int, width),
                               Q_ARG(int, height),
                               Q_ARG(int, delay));
-
-    return true;
 }
 
-bool XYGifCreator::frame(const QImage &img, int delay, Qt::ConnectionType type)
+void XYGifCreator::frame(const QImage &img, int delay, Qt::ConnectionType type)
 {
     // gif.cpp 文件有描述目前只能是RGBA8888图片格式，并且alpha没有被使用
     QImage img32 = img.convertToFormat(QImage::Format_RGBA8888);
@@ -93,15 +85,11 @@ bool XYGifCreator::frame(const QImage &img, int delay, Qt::ConnectionType type)
                               Q_ARG(int, mWidth),
                               Q_ARG(int, mHeight),
                               Q_ARG(int, delay));
-
-    return true;
 }
 
-bool XYGifCreator::end(Qt::ConnectionType type)
+void XYGifCreator::end(Qt::ConnectionType type)
 {
     QMetaObject::invokeMethod(mGif, "end", type);
-
-    return true;
 }
 
 #include "xygifcreator.moc"
