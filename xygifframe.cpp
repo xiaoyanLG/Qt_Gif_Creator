@@ -34,8 +34,19 @@ static QImage getScreenImage(int x, int y, int width, int height)
 
     CURSORINFO hCur ;
     ZeroMemory(&hCur,sizeof(hCur));
-    hCur.cbSize=sizeof(hCur);
+    hCur.cbSize = sizeof(CURSORINFO);
     GetCursorInfo(&hCur);
+
+    ICONINFO IconInfo = {};
+    if(GetIconInfo(hCur.hCursor, &IconInfo))
+    {
+        hCur.ptScreenPos.x -= IconInfo.xHotspot;
+        hCur.ptScreenPos.y -= IconInfo.yHotspot;
+        if(nullptr != IconInfo.hbmMask)
+            DeleteObject(IconInfo.hbmMask);
+        if(nullptr != IconInfo.hbmColor)
+            DeleteObject(IconInfo.hbmColor);
+    }
 
     HBITMAP bitmap = ::CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, (LPVOID*)&lpBitmapBits, nullptr, 0);
     HGDIOBJ oldbmp = ::SelectObject(hMemDC, bitmap);
