@@ -29,14 +29,14 @@ SOURCES += \
     xygifcreator.cpp \
     xygifframe.cpp \
     xymovablewidget.cpp \
-    gif.cpp \
     xypackimage.cpp
 
 HEADERS += \
     xygifcreator.h \
     xygifframe.h \
     xymovablewidget.h \
-    xypackimage.h
+    xypackimage.h \
+    gif.h
 
 FORMS += \
     xygifframe.ui \
@@ -51,7 +51,7 @@ RESOURCES += \
     images.qrc
 
 win32 {
-LIBS += -lGdi32 -luser32
+LIBS += -lGdi32 -lUser32
 msvc {
 greaterThan(QT_MAJOR_VERSION, 4): RC_FILE = ico.rc
 }

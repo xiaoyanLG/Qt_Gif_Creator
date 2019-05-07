@@ -1,40 +1,48 @@
-#include "xygifcreator.h"
-#include "gif.cpp"
+﻿#include "xygifcreator.h"
 #include <QImage>
 #include <QThread>
-#include <QDebug>
 
-class XYGif : public QObject, public Gif
+#include "gif.h"
+
+class XYGif : public QObject
 {
     Q_OBJECT
 public:
     explicit XYGif()
     {
-        mWorkThread = new QThread;
-        moveToThread(mWorkThread);
+        moveToThread(&mWorkThread);
+    }
+    ~XYGif()
+    {
+        if (mWorkThread.isRunning())
+        {
+            mWorkThread.quit();
+            mWorkThread.wait();
+        }
     }
 
 public slots:
     void begin(const QString &file, int width, int height, int delay)
     {
-        GifBegin(file.toUtf8().data(), static_cast<quint32>(width), static_cast<quint32>(height), static_cast<quint32>(delay));
+        GifBegin(&mGifWriter, file.toUtf8().data(), static_cast<quint32>(width), static_cast<quint32>(height), static_cast<quint32>(delay));
     }
     void frame(const QImage &img, int width, int height, int delay)
     {
-        GifWriteFrame(img.bits(),
+        GifWriteFrame(&mGifWriter, img.bits(),
                       static_cast<quint32>(qMin(width, img.width())),
                       static_cast<quint32>(qMin(height, img.height())),
                       static_cast<quint32>(100.0 / delay));
     }
     void end()
     {
-        GifEnd();
+        GifEnd(&mGifWriter);
 
-        mWorkThread->quit();
+        mWorkThread.quit();
     }
 
 private:
-    QThread *mWorkThread;
+    GifWriter mGifWriter;
+    QThread   mWorkThread;
 
     friend class XYGifCreator;
 };
@@ -43,7 +51,7 @@ XYGifCreator::XYGifCreator(QObject *parent)
     : QObject(parent)
 {
     mGif = new XYGif;
-    connect(mGif->mWorkThread, &QThread::finished, this, &XYGifCreator::finished);
+    connect(&mGif->mWorkThread, &QThread::finished, this, &XYGifCreator::finished);
 }
 
 XYGifCreator::~XYGifCreator()
@@ -53,12 +61,12 @@ XYGifCreator::~XYGifCreator()
 
 void XYGifCreator::startThread()
 {
-    mGif->mWorkThread->start();
+    mGif->mWorkThread.start();
 }
 
 bool XYGifCreator::isRunning()
 {
-    return mGif->mWorkThread->isRunning();
+    return mGif->mWorkThread.isRunning();
 }
 
 void XYGifCreator::begin(const QString &file, int width, int height, int delay, Qt::ConnectionType type)
