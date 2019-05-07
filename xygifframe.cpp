@@ -162,6 +162,8 @@ void XYGifFrame::start()
 
         frame();
         mTimer.start(static_cast<int>(1000.0 / ui->interval->value()));
+        ui->width->setDisabled(true);
+        ui->height->setDisabled(true);
     }
     else
     {
@@ -175,6 +177,8 @@ void XYGifFrame::stop()
     ui->gif->setText(QStringLiteral("开始录制"));
     mGifCreator->end();
 
+    ui->width->setEnabled(true);
+    ui->height->setEnabled(true);
     this->ui->tips->setText(QStringLiteral("请等待保存Gif..."));
 }
 
