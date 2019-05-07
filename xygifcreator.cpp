@@ -84,7 +84,7 @@ void XYGifCreator::begin(const QString &file, int width, int height, int delay, 
 
 void XYGifCreator::frame(const QImage &img, int delay, Qt::ConnectionType type)
 {
-    // gif.cpp 文件有描述目前只能是RGBA8888图片格式，并且alpha没有被使用
+    // gif.h 文件有描述目前只能是RGBA8888图片格式，并且alpha没有被使用
     QImage img32 = img.convertToFormat(QImage::Format_RGBA8888);
 
     QMetaObject::invokeMethod(mGif, "frame", type,
