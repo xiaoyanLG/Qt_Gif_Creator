@@ -14,7 +14,7 @@ class XYGifFrame : public XYMovableWidget
     Q_OBJECT
 public:
     explicit XYGifFrame(QWidget *parent = nullptr);
-    ~XYGifFrame();
+	~XYGifFrame() override;
 
 public slots:
     void doResize();
@@ -26,12 +26,16 @@ public slots:
     void frame();
 
 protected:
-    void paintEvent(QPaintEvent *event);
-    void resizeEvent(QResizeEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void wheelEvent(QWheelEvent *event);
+    bool eventFilter(QObject *watched, QEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+
+private:
+    QImage getCurScreenImage();
 
     // 用于resize窗口
 private:

@@ -89,8 +89,10 @@ XYGifFrame::XYGifFrame(QWidget *parent)
     mTimer.setSingleShot(false);
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
 
-    connect(ui->width, SIGNAL(valueChanged(int)), this, SLOT(doResize()));
-    connect(ui->height, SIGNAL(valueChanged(int)), this, SLOT(doResize()));
+    ui->width->installEventFilter(this);
+    ui->height->installEventFilter(this);
+    connect(ui->width, SIGNAL(editingFinished()), this, SLOT(doResize()));
+    connect(ui->height, SIGNAL(editingFinished()), this, SLOT(doResize()));
     connect(ui->gif, SIGNAL(clicked()), this, SLOT(active()));
     connect(ui->img, SIGNAL(clicked()), this, SLOT(packImages()));
     connect(&mTimer, SIGNAL(timeout()), this, SLOT(frame()));
@@ -186,37 +188,27 @@ void XYGifFrame::stop()
 
 void XYGifFrame::frame()
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    auto screen = qApp->screenAt(pos());
-#else
-    QScreen *screen = nullptr;
-    foreach (screen, qApp->screens())
+    QImage img = getCurScreenImage();
+    if (!img.isNull())
     {
-        if (screen->geometry().contains(pos()))
-        {
-            break;
-        }
-    }
-#endif
-    if (screen != nullptr)
-    {
-#ifdef Q_OS_WIN32
-        QImage img = getScreenImage(x() + mRecordRect.x(),
-                                    y() + mRecordRect.y(),
-                                    mRecordRect.width(),
-                                    mRecordRect.height());
-#else
-        QImage img = screen->grabWindow(0,
-                                        x() + mRecordRect.x(),
-                                        y() + mRecordRect.y(),
-                                        mRecordRect.width(),
-                                        mRecordRect.height()).toImage();
-#endif
-        mGifCreator->frame(img, ui->interval->value());
+        mGifCreator->frame(getCurScreenImage(), ui->interval->value());
         mPixs++;
 
         ui->tips->setText(QStringLiteral("已保存 %1 张图片").arg(mPixs));
     }
+}
+
+bool XYGifFrame::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == ui->width
+            || watched == ui->height)
+    {
+        if (event->type() == QEvent::Wheel)
+        {
+            doResize();
+        }
+    }
+    return XYMovableWidget::eventFilter(watched, event);
 }
 
 void XYGifFrame::paintEvent(QPaintEvent *)
@@ -293,4 +285,38 @@ void XYGifFrame::wheelEvent(QWheelEvent *event)
     }
 
     XYMovableWidget::wheelEvent(event);
+}
+
+QImage XYGifFrame::getCurScreenImage()
+{
+    QImage img;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+    auto screen = qApp->screenAt(pos());
+#else
+    QScreen *screen = nullptr;
+    foreach (screen, qApp->screens())
+    {
+        if (screen->geometry().contains(pos()))
+        {
+            break;
+        }
+    }
+#endif
+    if (screen != nullptr)
+    {
+#ifdef Q_OS_WIN32
+        img = getScreenImage(x() + mRecordRect.x(),
+                                    y() + mRecordRect.y(),
+                                    mRecordRect.width(),
+                                    mRecordRect.height());
+#else
+        img = screen->grabWindow(0,
+                                        x() + mRecordRect.x(),
+                                        y() + mRecordRect.y(),
+                                        mRecordRect.width(),
+                                        mRecordRect.height()).toImage();
+#endif
+    }
+
+    return img;
 }
