@@ -55,4 +55,6 @@ LIBS += -lGdi32 -lUser32
 msvc {
 greaterThan(QT_MAJOR_VERSION, 4): RC_FILE = ico.rc
 }
+} else {
+LIBS += -lX11 -lXfixes
 }

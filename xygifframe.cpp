@@ -77,6 +77,55 @@ static QImage getScreenImage(int x, int y, int width, int height)
     delete[] bmp;
     return image;
 }
+#else // linux x11
+#include <X11/Xlib.h>
+#include <X11/extensions/Xfixes.h>
+static void X11drawCursor(Display *display, QImage &image, int recording_area_x, int recording_area_y)
+{
+    // get the cursor
+    XFixesCursorImage *xcim = XFixesGetCursorImage(display);
+    if(xcim == NULL)
+        return;
+
+    // calculate the position of the cursor
+    int x = xcim->x - xcim->xhot - recording_area_x;
+    int y = xcim->y - xcim->yhot - recording_area_y;
+
+    // calculate the part of the cursor that's visible
+    int cursor_left = std::max(0, -x), cursor_right = std::min((int) xcim->width, image.width() - x);
+    int cursor_top = std::max(0, -y), cursor_bottom = std::min((int) xcim->height, image.height() - y);
+
+    unsigned int pixel_bytes, r_offset, g_offset, b_offset; // ARGB
+    pixel_bytes = 4;
+    r_offset = 2; g_offset = 1; b_offset = 0;
+
+    // draw the cursor
+    // XFixesCursorImage uses 'long' instead of 'int' to store the cursor images, which is a bit weird since
+    // 'long' is 64-bit on 64-bit systems and only 32 bits are actually used. The image uses premultiplied alpha.
+    for(int j = cursor_top; j < cursor_bottom; ++j) {
+        unsigned long *cursor_row = xcim->pixels + xcim->width * j;
+        uint8_t *image_row = (uint8_t*) image.bits() + image.bytesPerLine() * (y + j);
+        for(int i = cursor_left; i < cursor_right; ++i) {
+            unsigned long cursor_pixel = cursor_row[i];
+            uint8_t *image_pixel = image_row + pixel_bytes * (x + i);
+            int cursor_a = (uint8_t) (cursor_pixel >> 24);
+            int cursor_r = (uint8_t) (cursor_pixel >> 16);
+            int cursor_g = (uint8_t) (cursor_pixel >> 8);
+            int cursor_b = (uint8_t) (cursor_pixel >> 0);
+            if(cursor_a == 255) {
+                image_pixel[r_offset] = cursor_r;
+                image_pixel[g_offset] = cursor_g;
+                image_pixel[b_offset] = cursor_b;
+            } else {
+                image_pixel[r_offset] = (image_pixel[r_offset] * (255 - cursor_a) + 127) / 255 + cursor_r;
+                image_pixel[g_offset] = (image_pixel[g_offset] * (255 - cursor_a) + 127) / 255 + cursor_g;
+                image_pixel[b_offset] = (image_pixel[b_offset] * (255 - cursor_a) + 127) / 255 + cursor_b;
+            }
+        }
+    }
+    // free the cursor
+    XFree(xcim);
+}
 #endif
 
 XYGifFrame::XYGifFrame(QWidget *parent)
@@ -191,7 +240,7 @@ void XYGifFrame::frame()
     QImage img = getCurScreenImage();
     if (!img.isNull())
     {
-        mGifCreator->frame(getCurScreenImage(), ui->interval->value());
+        mGifCreator->frame(img, ui->interval->value());
         mPixs++;
 
         ui->tips->setText(QStringLiteral("已保存 %1 张图片").arg(mPixs));
@@ -315,6 +364,11 @@ QImage XYGifFrame::getCurScreenImage()
                                         y() + mRecordRect.y(),
                                         mRecordRect.width(),
                                         mRecordRect.height()).toImage();
+
+        // 需要系统是x11后端
+        auto display = XOpenDisplay(NULL);
+        X11drawCursor(display, img, x() + mRecordRect.x(), y() + mRecordRect.y());
+        XCloseDisplay(display);
 #endif
     }
 
